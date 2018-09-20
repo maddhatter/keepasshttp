@@ -473,16 +473,12 @@ namespace KeePassHttp {
             if (!VerifyRequest(r, aes))
                 return;
 
-            if (r.Names == null)
+            if (r.Username == null)
             {
                 return;
             }
-            List<String> decryptedNames = new List<String>();
-            foreach (String name in r.Names) {
-                if (name != null) {
-                    decryptedNames.Add(CryptoTransform(name, true, false, aes, CMode.DECRYPT));
-                }
-            }
+
+            string decryptedUsername = CryptoTransform(r.Username, true, false, aes, CMode.DECRYPT);
 
             List<PwDatabase> listDatabases = new List<PwDatabase>();
             
@@ -506,19 +502,15 @@ namespace KeePassHttp {
             foreach (PwDatabase db in listDatabases)
             {
                 foreach (var le in db.RootGroup.GetEntries(true)) {
-                    var title = le.Strings.ReadSafe(PwDefs.TitleField);
-                    bool titleMatched = false;
-                    if (title != null) {
-                        foreach (String name in decryptedNames)
+                    var username = le.Strings.ReadSafe(PwDefs.TanIndexField);
+                    bool usernameMatched = false;
+                    if (username != null) {
+                        if (decryptedUsername.Equals(username, StringComparison.OrdinalIgnoreCase))
                         {
-                            if (name.Equals(title))
-                            {
-                                titleMatched = true;
-                                break;
-                            }
+                            usernameMatched = true;
                         }
                     }
-                    if (titleMatched)
+                    if (usernameMatched)
                     {
                         listEntries.Add(new PwEntryDatabase(le, db));
                     }

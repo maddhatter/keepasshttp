@@ -61,7 +61,7 @@ namespace KeePassHttp
     {
         public const string GET_LOGINS = "get-logins";
         public const string GET_LOGINS_COUNT = "get-logins-count";
-        public const string GET_LOGINS_BY_NAMES = "get-logins-by-names";
+        public const string GET_LOGINS_BY_USERNAME = "get-logins-by-username";
         public const string GET_ALL_LOGINS = "get-all-logins";
         public const string SET_LOGIN = "set-login";
         public const string ASSOCIATE = "associate";
@@ -94,9 +94,9 @@ namespace KeePassHttp
         public string Url;
 
         /// <summary>
-        /// Always encrypted, used get-logins-by-names
+        /// Always encrypted, used get-logins-by-username
         /// </summary>
-        public List<string> Names;
+        public string Username;
 
         /// <summary>
         /// Always encrypted, used with get-login
@@ -135,7 +135,7 @@ namespace KeePassHttp
         {
             RequestType = request;
 
-            if (request == Request.GET_LOGINS || request == Request.GET_ALL_LOGINS || request == Request.GET_LOGINS_BY_NAMES || request == Request.GENERATE_PASSWORD)
+            if (request == Request.GET_LOGINS || request == Request.GET_ALL_LOGINS || request == Request.GET_LOGINS_BY_USERNAME || request == Request.GENERATE_PASSWORD)
                 Entries = new List<ResponseEntry>();
             else
                 Entries = null;
