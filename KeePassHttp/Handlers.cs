@@ -18,6 +18,7 @@ using KeePass.UI;
 using KeePass;
 using KeePassLib.Cryptography.PasswordGenerator;
 using KeePassLib.Cryptography;
+using KeePass.Util.Spr;
 
 namespace KeePassHttp {
     public sealed partial class KeePassHttpExt : Plugin
@@ -229,6 +230,23 @@ namespace KeePassHttp {
                 result = from e in result where filterSchemes(e.entry) select e;
             }
 
+            Func<PwEntry, bool> hideExpired = delegate(PwEntry e)
+            {
+                DateTime dtNow = DateTime.UtcNow;
+
+                if(e.Expires && (e.ExpiryTime <= dtNow))
+                {
+                    return false;
+                }
+
+                return true;
+            };
+
+            if (configOpt.HideExpired)
+            {
+                result = from e in result where hideExpired(e.entry) select e;
+            }
+
             return result;
         }
 
@@ -345,7 +363,9 @@ namespace KeePassHttp {
                                  orderby e.entry.UsageCount ascending 
                                  select e).ToList();
 
-                    ulong lowestDistance = itemsList[0].entry.UsageCount;
+                    ulong lowestDistance = itemsList.Count > 0 ?
+                        itemsList[0].entry.UsageCount :
+                        0;
 
                     itemsList = (from e in itemsList
                                  where e.entry.UsageCount == lowestDistance
@@ -522,8 +542,10 @@ namespace KeePassHttp {
 
         private ResponseEntry PrepareElementForResponseEntries(ConfigOpt configOpt, PwEntryDatabase entryDatabase)
         {
+            SprContext ctx = new SprContext(entryDatabase.entry, entryDatabase.database, SprCompileFlags.All, false, false);
+
             var name = entryDatabase.entry.Strings.ReadSafe(PwDefs.TitleField);
-            var loginpass = GetUserPass(entryDatabase);
+            var loginpass = GetUserPass(entryDatabase, ctx);
             var login = loginpass[0];
             var passwd = loginpass[1];
             var uuid = entryDatabase.entry.Uuid.ToHexString();
@@ -534,10 +556,21 @@ namespace KeePassHttp {
                 fields = new List<ResponseStringField>();
                 foreach (var sf in entryDatabase.entry.Strings)
                 {
-                    if (sf.Key.StartsWith("KPH: "))
+                    var sfValue = entryDatabase.entry.Strings.ReadSafe(sf.Key);
+                    
+                    // follow references
+                    sfValue = SprEngine.Compile(sfValue, ctx);
+
+                    if (configOpt.ReturnStringFieldsWithKphOnly)
                     {
-                        var sfValue = entryDatabase.entry.Strings.ReadSafe(sf.Key);
-                        fields.Add(new ResponseStringField(sf.Key.Substring(5), sfValue));
+                        if (sf.Key.StartsWith("KPH: "))
+                        {
+                            fields.Add(new ResponseStringField(sf.Key.Substring(5), sfValue));
+                        }
+                    }
+                    else
+                    {
+                        fields.Add(new ResponseStringField(sf.Key, sfValue));
                     }
                 }
 

@@ -11,8 +11,10 @@ namespace KeePassHttp
         const string AlwaysAllowAccessKey = "KeePassHttp_AlwaysAllowAccess";
         const string AlwaysAllowUpdatesKey = "KeePassHttp_AlwaysAllowUpdates";
         const string SearchInAllOpenedDatabasesKey = "KeePassHttp_SearchInAllOpenedDatabases";
+        const string HideExpiredKey = "KeePassHttp_HideExpired";
         const string MatchSchemesKey = "KeePassHttp_MatchSchemes";
         const string ReturnStringFieldsKey = "KeePassHttp_ReturnStringFields";
+        const string ReturnStringFieldsWithKphOnlyKey = "KeePassHttp_ReturnStringFieldsWithKphOnly";
         const string SortResultByUsernameKey = "KeePassHttp_SortResultByUsername";
         const string ListenerPortKey = "KeePassHttp_ListenerPort";
         const string ListenerHostKey = "KeePassHttp_ListenerHost";
@@ -58,6 +60,11 @@ namespace KeePassHttp
             set { _config.SetBool(SearchInAllOpenedDatabasesKey, value); }
         }
 
+        public bool HideExpired
+        {
+            get { return _config.GetBool(HideExpiredKey, false); }
+            set { _config.SetBool(HideExpiredKey, value); }
+        }
         public bool MatchSchemes
         {
             get { return _config.GetBool(MatchSchemesKey, false); }
@@ -68,6 +75,12 @@ namespace KeePassHttp
         {
             get { return _config.GetBool(ReturnStringFieldsKey, false); }
             set { _config.SetBool(ReturnStringFieldsKey, value); }
+        }
+
+        public bool ReturnStringFieldsWithKphOnly
+        {
+            get { return _config.GetBool(ReturnStringFieldsWithKphOnlyKey, true); }
+            set { _config.SetBool(ReturnStringFieldsWithKphOnlyKey, value); }
         }
 
         public bool SortResultByUsername

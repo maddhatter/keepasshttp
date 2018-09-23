@@ -41,12 +41,16 @@ namespace KeePassHttp
             credAllowAccessCheckbox.Checked = _config.AlwaysAllowAccess;
             credAllowUpdatesCheckbox.Checked = _config.AlwaysAllowUpdates;
             credSearchInAllOpenedDatabases.Checked = _config.SearchInAllOpenedDatabases;
+            hideExpiredCheckbox.Checked = _config.HideExpired;
             matchSchemesCheckbox.Checked = _config.MatchSchemes;
             returnStringFieldsCheckbox.Checked = _config.ReturnStringFields;
+            returnStringFieldsWithKphOnlyCheckBox.Checked = _config.ReturnStringFieldsWithKphOnly;
             SortByUsernameRadioButton.Checked = _config.SortResultByUsername;
             SortByTitleRadioButton.Checked = !_config.SortResultByUsername;
             portNumber.Value = _config.ListenerPort;
             hostName.Text = _config.ListenerHost;
+
+            this.returnStringFieldsCheckbox_CheckedChanged(null, EventArgs.Empty);
         }
 
         private void okButton_Click(object sender, EventArgs e)
@@ -57,8 +61,10 @@ namespace KeePassHttp
             _config.AlwaysAllowAccess = credAllowAccessCheckbox.Checked;
             _config.AlwaysAllowUpdates = credAllowUpdatesCheckbox.Checked;
             _config.SearchInAllOpenedDatabases = credSearchInAllOpenedDatabases.Checked;
+            _config.HideExpired = hideExpiredCheckbox.Checked;
             _config.MatchSchemes = matchSchemesCheckbox.Checked;
             _config.ReturnStringFields = returnStringFieldsCheckbox.Checked;
+            _config.ReturnStringFieldsWithKphOnly = returnStringFieldsWithKphOnlyCheckBox.Checked;
             _config.SortResultByUsername = SortByUsernameRadioButton.Checked;
             _config.ListenerPort = (int)portNumber.Value;
             _config.ListenerHost = hostName.Text;
@@ -211,6 +217,11 @@ namespace KeePassHttp
         private void SetRestartRequired()
         {
             _restartRequired = (_config.ListenerPort != portNumber.Value) || (_config.ListenerHost != hostName.Text);
+        }
+
+        private void returnStringFieldsCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            this.returnStringFieldsWithKphOnlyCheckBox.Enabled = this.returnStringFieldsCheckbox.Checked;
         }
     }
 }
