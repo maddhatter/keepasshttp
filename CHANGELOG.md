@@ -14,4 +14,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - `set-login` now sets the `Success` field based on the result of the `UpdateEntry` or `CreateEntry` command instead of always returning `true`
  - Updated plugin `UpdateUrl` to the `maddhatter/keepasshttp` repository
  
-[Unleased]: https://github.com/maddhatter/keepasshttp/compare/master...develop
+[Unreleased]: https://github.com/maddhatter/keepasshttp/compare/master...develop
