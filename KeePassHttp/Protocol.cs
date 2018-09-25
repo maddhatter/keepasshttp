@@ -196,18 +196,20 @@ namespace KeePassHttp
     public class ResponseEntry
     {
         public ResponseEntry() { }
-        public ResponseEntry(string name, string login, string password, string uuid, List<ResponseStringField> stringFields)
+        public ResponseEntry(string name, string login, string password, string uuid, ResponseGroupField group, List<ResponseStringField> stringFields)
         {
             Login = login;
             Password = password;
             Uuid = uuid;
             Name = name;
+            Group = group;
             StringFields = stringFields;
         }
         public string Login;
         public string Password;
         public string Uuid;
         public string Name;
+        public ResponseGroupField Group;
         public List<ResponseStringField> StringFields = null;
     }
     public class ResponseStringField
@@ -220,6 +222,17 @@ namespace KeePassHttp
         }
         public string Key;
         public string Value;
+    }
+    public class ResponseGroupField
+    {
+        public ResponseGroupField() {}
+        public ResponseGroupField(string name, string uuid)
+        {
+            Name = name;
+            Uuid = uuid;
+        }
+        public string Name;
+        public string Uuid;
     }
     public class KeePassHttpEntryConfig
     {

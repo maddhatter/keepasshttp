@@ -95,7 +95,8 @@ namespace KeePassHttp {
                 var name = entry.Strings.ReadSafe(PwDefs.TitleField);
                 var login = GetUserPass(entry)[0];
                 var uuid = entry.Uuid.ToHexString();
-                var e = new ResponseEntry(name, login, null, uuid, null);
+                var group = new ResponseGroupField(entry.ParentGroup.GetFullPath("/", true), entry.ParentGroup.Uuid.ToHexString());
+                var e = new ResponseEntry(name, login, null, uuid, group, null);
                 resp.Entries.Add(e);
             }
             resp.Success = true;
@@ -106,6 +107,8 @@ namespace KeePassHttp {
                 entry.Name = CryptoTransform(entry.Name, false, true, aes, CMode.ENCRYPT);
                 entry.Login = CryptoTransform(entry.Login, false, true, aes, CMode.ENCRYPT);
                 entry.Uuid = CryptoTransform(entry.Uuid, false, true, aes, CMode.ENCRYPT);
+                entry.Group.Name = CryptoTransform(entry.Group.Name, false, true, aes, CMode.ENCRYPT);
+                entry.Group.Uuid = CryptoTransform(entry.Group.Uuid, false, true, aes, CMode.ENCRYPT);
             }
         }
 
@@ -474,6 +477,8 @@ namespace KeePassHttp {
                 entry.Login = CryptoTransform(entry.Login, false, true, aes, CMode.ENCRYPT);
                 entry.Uuid = CryptoTransform(entry.Uuid, false, true, aes, CMode.ENCRYPT);
                 entry.Password = CryptoTransform(entry.Password, false, true, aes, CMode.ENCRYPT);
+                entry.Group.Name = CryptoTransform(entry.Group.Name, false, true, aes, CMode.ENCRYPT);
+                entry.Group.Uuid = CryptoTransform(entry.Group.Uuid, false, true, aes, CMode.ENCRYPT);
 
                 if (entry.StringFields != null)
                 {
@@ -549,6 +554,7 @@ namespace KeePassHttp {
             var login = loginpass[0];
             var passwd = loginpass[1];
             var uuid = entryDatabase.entry.Uuid.ToHexString();
+            var group = new ResponseGroupField(entryDatabase.entry.ParentGroup.GetFullPath("/", true), entryDatabase.entry.ParentGroup.Uuid.ToHexString());
 
             List<ResponseStringField> fields = null;
             if (configOpt.ReturnStringFields)
@@ -585,7 +591,7 @@ namespace KeePassHttp {
                 }
             }
 
-            return new ResponseEntry(name, login, passwd, uuid, fields);
+            return new ResponseEntry(name, login, passwd, uuid, group, fields);
         }
 
         private void SetLoginHandler(Request r, Response resp, Aes aes)
@@ -713,7 +719,7 @@ namespace KeePassHttp {
             if (pbNew != null)
             {
                 uint uBits = QualityEstimation.EstimatePasswordBits(pbNew);
-                ResponseEntry item = new ResponseEntry(Request.GENERATE_PASSWORD, uBits.ToString(), StrUtil.Utf8.GetString(pbNew), Request.GENERATE_PASSWORD, null);
+                ResponseEntry item = new ResponseEntry(Request.GENERATE_PASSWORD, uBits.ToString(), StrUtil.Utf8.GetString(pbNew), Request.GENERATE_PASSWORD, null, null);
                 resp.Entries.Add(item);
                 resp.Success = true;
                 resp.Count = 1;
@@ -729,6 +735,8 @@ namespace KeePassHttp {
                 entry.Login = CryptoTransform(entry.Login, false, true, aes, CMode.ENCRYPT);
                 entry.Uuid = CryptoTransform(entry.Uuid, false, true, aes, CMode.ENCRYPT);
                 entry.Password = CryptoTransform(entry.Password, false, true, aes, CMode.ENCRYPT);
+                entry.Group.Name = CryptoTransform(entry.Group.Name, false, true, aes, CMode.ENCRYPT);
+                entry.Group.Uuid = CryptoTransform(entry.Group.Uuid, false, true, aes, CMode.ENCRYPT);
             }
         }
 
