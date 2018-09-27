@@ -55,7 +55,7 @@ namespace KeePassHttp
         Dictionary<string, RequestHandler> handlers = new Dictionary<string, RequestHandler>();
 
         //public string UpdateUrl = "";
-        public override string UpdateUrl { get { return "https://passifox.appspot.com/kph/latest-version.txt"; } }
+        public override string UpdateUrl { get { return "https://raw.githubusercontent.com/maddhatter/keepasshttp/master/update-version.txt"; } }
 
         private SearchParameters MakeSearchParameters()
         {
@@ -192,6 +192,7 @@ namespace KeePassHttp
                     handlers.Add(Request.TEST_ASSOCIATE, TestAssociateHandler);
                     handlers.Add(Request.ASSOCIATE, AssociateHandler);
                     handlers.Add(Request.GET_LOGINS, GetLoginsHandler);
+                    handlers.Add(Request.GET_LOGINS_BY_USERNAME, GetLoginsByNamesHandler);
                     handlers.Add(Request.GET_LOGINS_COUNT, GetLoginsCountHandler);
                     handlers.Add(Request.GET_ALL_LOGINS, GetAllLoginsHandler);
                     handlers.Add(Request.SET_LOGIN, SetLoginHandler);

@@ -61,6 +61,7 @@ namespace KeePassHttp
     {
         public const string GET_LOGINS = "get-logins";
         public const string GET_LOGINS_COUNT = "get-logins-count";
+        public const string GET_LOGINS_BY_USERNAME = "get-logins-by-username";
         public const string GET_ALL_LOGINS = "get-all-logins";
         public const string SET_LOGIN = "set-login";
         public const string ASSOCIATE = "associate";
@@ -91,6 +92,11 @@ namespace KeePassHttp
         /// Always encrypted, used with get and set-login
         /// </summary>
         public string Url;
+
+        /// <summary>
+        /// Always encrypted, used get-logins-by-username
+        /// </summary>
+        public string Username;
 
         /// <summary>
         /// Always encrypted, used with get-login
@@ -129,7 +135,7 @@ namespace KeePassHttp
         {
             RequestType = request;
 
-            if (request == Request.GET_LOGINS || request == Request.GET_ALL_LOGINS || request == Request.GENERATE_PASSWORD)
+            if (request == Request.GET_LOGINS || request == Request.GET_ALL_LOGINS || request == Request.GET_LOGINS_BY_USERNAME || request == Request.GENERATE_PASSWORD)
                 Entries = new List<ResponseEntry>();
             else
                 Entries = null;
@@ -190,18 +196,20 @@ namespace KeePassHttp
     public class ResponseEntry
     {
         public ResponseEntry() { }
-        public ResponseEntry(string name, string login, string password, string uuid, List<ResponseStringField> stringFields)
+        public ResponseEntry(string name, string login, string password, string uuid, ResponseGroupField group, List<ResponseStringField> stringFields)
         {
             Login = login;
             Password = password;
             Uuid = uuid;
             Name = name;
+            Group = group;
             StringFields = stringFields;
         }
         public string Login;
         public string Password;
         public string Uuid;
         public string Name;
+        public ResponseGroupField Group;
         public List<ResponseStringField> StringFields = null;
     }
     public class ResponseStringField
@@ -214,6 +222,17 @@ namespace KeePassHttp
         }
         public string Key;
         public string Value;
+    }
+    public class ResponseGroupField
+    {
+        public ResponseGroupField() {}
+        public ResponseGroupField(string name, string uuid)
+        {
+            Name = name;
+            Uuid = uuid;
+        }
+        public string Name;
+        public string Uuid;
     }
     public class KeePassHttpEntryConfig
     {

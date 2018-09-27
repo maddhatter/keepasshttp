@@ -86,21 +86,17 @@ namespace KeePassHttp {
             if (!VerifyRequest(r, aes))
                 return;
 
-            var list = new PwObjectList<PwEntry>();
-
             var root = host.Database.RootGroup;
 
-            var parms = MakeSearchParameters();
+            var list = root.GetEntries(true);
 
-            parms.SearchString = @"^[A-Za-z0-9:/-]+\.[A-Za-z0-9:/-]+$"; // match anything looking like a domain or url
-
-            root.SearchEntries(parms, list);
             foreach (var entry in list)
             {
                 var name = entry.Strings.ReadSafe(PwDefs.TitleField);
                 var login = GetUserPass(entry)[0];
                 var uuid = entry.Uuid.ToHexString();
-                var e = new ResponseEntry(name, login, null, uuid, null);
+                var group = new ResponseGroupField(entry.ParentGroup.GetFullPath("/", true), entry.ParentGroup.Uuid.ToHexString());
+                var e = new ResponseEntry(name, login, null, uuid, group, null);
                 resp.Entries.Add(e);
             }
             resp.Success = true;
@@ -111,6 +107,8 @@ namespace KeePassHttp {
                 entry.Name = CryptoTransform(entry.Name, false, true, aes, CMode.ENCRYPT);
                 entry.Login = CryptoTransform(entry.Login, false, true, aes, CMode.ENCRYPT);
                 entry.Uuid = CryptoTransform(entry.Uuid, false, true, aes, CMode.ENCRYPT);
+                entry.Group.Name = CryptoTransform(entry.Group.Name, false, true, aes, CMode.ENCRYPT);
+                entry.Group.Uuid = CryptoTransform(entry.Group.Uuid, false, true, aes, CMode.ENCRYPT);
             }
         }
 
@@ -390,43 +388,7 @@ namespace KeePassHttp {
                     itemsList = items2.ToList();
                 }
 
-                foreach (var entryDatabase in itemsList)
-                {
-                    var e = PrepareElementForResponseEntries(configOpt, entryDatabase);
-                    resp.Entries.Add(e);
-                }
-
-                if (itemsList.Count > 0)
-                {
-                    var names = (from e in resp.Entries select e.Name).Distinct<string>();
-                    var n = String.Join("\n    ", names.ToArray<string>());
-
-                    if (configOpt.ReceiveCredentialNotification)
-                        ShowNotification(String.Format("{0}: {1} is receiving credentials for:\n    {2}", r.Id, host, n));
-                }
-
-                resp.Success = true;
-                resp.Id = r.Id;
-                SetResponseVerifier(resp, aes);
-
-                foreach (var entry in resp.Entries)
-                {
-                    entry.Name = CryptoTransform(entry.Name, false, true, aes, CMode.ENCRYPT);
-                    entry.Login = CryptoTransform(entry.Login, false, true, aes, CMode.ENCRYPT);
-                    entry.Uuid = CryptoTransform(entry.Uuid, false, true, aes, CMode.ENCRYPT);
-                    entry.Password = CryptoTransform(entry.Password, false, true, aes, CMode.ENCRYPT);
-
-                    if (entry.StringFields != null)
-                    {
-                        foreach (var sf in entry.StringFields)
-                        {
-                            sf.Key = CryptoTransform(sf.Key, false, true, aes, CMode.ENCRYPT);
-                            sf.Value = CryptoTransform(sf.Value, false, true, aes, CMode.ENCRYPT);
-                        }
-                    }
-                }
-
-                resp.Count = resp.Entries.Count;
+                CompleteGetLoginsResult(itemsList,configOpt,resp,r.Id,host,aes);
             }
             else
             {
@@ -476,6 +438,113 @@ namespace KeePassHttp {
             return distance[currentRow, m];
         }
 
+        private void CompleteGetLoginsResult(List<PwEntryDatabase> itemsList, ConfigOpt configOpt, Response resp, String rId, String host, Aes aes)
+        {
+            foreach (var entryDatabase in itemsList)
+            {
+                var e = PrepareElementForResponseEntries(configOpt, entryDatabase);
+                resp.Entries.Add(e);
+            }
+
+            if (itemsList.Count > 0)
+            {
+                var names = (from e in resp.Entries select e.Name).Distinct<string>();
+                var n = String.Join("\n    ", names.ToArray<string>());
+
+                if (configOpt.ReceiveCredentialNotification)
+                {
+                    String notificationMessage;
+                    if (host == null)
+                    {
+                        notificationMessage = rId;
+                    }
+                    else
+                    {
+                        notificationMessage = String.Format("{0}: {1}", rId, host);
+                    }
+                    notificationMessage = String.Format("{0} is receiving credentials for:\n    {1}", notificationMessage, n);
+                    ShowNotification(notificationMessage);
+                }
+            }
+
+            resp.Success = true;
+            resp.Id = rId;
+            SetResponseVerifier(resp, aes);
+
+            foreach (var entry in resp.Entries)
+            {
+                entry.Name = CryptoTransform(entry.Name, false, true, aes, CMode.ENCRYPT);
+                entry.Login = CryptoTransform(entry.Login, false, true, aes, CMode.ENCRYPT);
+                entry.Uuid = CryptoTransform(entry.Uuid, false, true, aes, CMode.ENCRYPT);
+                entry.Password = CryptoTransform(entry.Password, false, true, aes, CMode.ENCRYPT);
+                entry.Group.Name = CryptoTransform(entry.Group.Name, false, true, aes, CMode.ENCRYPT);
+                entry.Group.Uuid = CryptoTransform(entry.Group.Uuid, false, true, aes, CMode.ENCRYPT);
+
+                if (entry.StringFields != null)
+                {
+                    foreach (var sf in entry.StringFields)
+                    {
+                        sf.Key = CryptoTransform(sf.Key, false, true, aes, CMode.ENCRYPT);
+                        sf.Value = CryptoTransform(sf.Value, false, true, aes, CMode.ENCRYPT);
+                    }
+                }
+            }
+
+            resp.Count = resp.Entries.Count;
+        }
+
+        private void GetLoginsByNamesHandler(Request r, Response resp, Aes aes)
+        {
+            if (!VerifyRequest(r, aes))
+                return;
+
+            if (r.Username == null)
+            {
+                return;
+            }
+
+            string decryptedUsername = CryptoTransform(r.Username, true, false, aes, CMode.DECRYPT);
+
+            List<PwDatabase> listDatabases = new List<PwDatabase>();
+            
+            var configOpt = new ConfigOpt(this.host.CustomConfig);
+            if (configOpt.SearchInAllOpenedDatabases)
+            {
+                foreach (PwDocument doc in host.MainWindow.DocumentManager.Documents)
+                {
+                    if (doc.Database.IsOpen)
+                    {
+                        listDatabases.Add(doc.Database);
+                    }
+                }
+            }
+            else
+            {
+                listDatabases.Add(host.Database);
+            }
+
+            var listEntries = new List<PwEntryDatabase>();
+            foreach (PwDatabase db in listDatabases)
+            {
+                foreach (var le in db.RootGroup.GetEntries(true)) {
+                    var username = le.Strings.ReadSafe(PwDefs.TanIndexField);
+                    bool usernameMatched = false;
+                    if (username != null) {
+                        if (decryptedUsername.Equals(username, StringComparison.OrdinalIgnoreCase))
+                        {
+                            usernameMatched = true;
+                        }
+                    }
+                    if (usernameMatched)
+                    {
+                        listEntries.Add(new PwEntryDatabase(le, db));
+                    }
+                }
+            }
+
+            CompleteGetLoginsResult(listEntries, configOpt, resp, r.Id, null, aes);
+        }
+
         private ResponseEntry PrepareElementForResponseEntries(ConfigOpt configOpt, PwEntryDatabase entryDatabase)
         {
             SprContext ctx = new SprContext(entryDatabase.entry, entryDatabase.database, SprCompileFlags.All, false, false);
@@ -485,6 +554,7 @@ namespace KeePassHttp {
             var login = loginpass[0];
             var passwd = loginpass[1];
             var uuid = entryDatabase.entry.Uuid.ToHexString();
+            var group = new ResponseGroupField(entryDatabase.entry.ParentGroup.GetFullPath("/", true), entryDatabase.entry.ParentGroup.Uuid.ToHexString());
 
             List<ResponseStringField> fields = null;
             if (configOpt.ReturnStringFields)
@@ -521,7 +591,7 @@ namespace KeePassHttp {
                 }
             }
 
-            return new ResponseEntry(name, login, passwd, uuid, fields);
+            return new ResponseEntry(name, login, passwd, uuid, group, fields);
         }
 
         private void SetLoginHandler(Request r, Response resp, Aes aes)
@@ -547,15 +617,14 @@ namespace KeePassHttp {
             if (uuid != null)
             {
                 // modify existing entry
-                UpdateEntry(uuid, username, password, urlHost, r.Id);
+                resp.Success = UpdateEntry(uuid, username, password, urlHost, r.Id);
             }
             else
             {
                 // create new entry
-                CreateEntry(username, password, urlHost, url, r, aes);
+                resp.Success = CreateEntry(username, password, urlHost, url, r, aes);
             }
 
-            resp.Success = true;
             resp.Id = r.Id;
             SetResponseVerifier(resp, aes);
         }
@@ -649,7 +718,7 @@ namespace KeePassHttp {
             if (pbNew != null)
             {
                 uint uBits = QualityEstimation.EstimatePasswordBits(pbNew);
-                ResponseEntry item = new ResponseEntry(Request.GENERATE_PASSWORD, uBits.ToString(), StrUtil.Utf8.GetString(pbNew), Request.GENERATE_PASSWORD, null);
+                ResponseEntry item = new ResponseEntry(Request.GENERATE_PASSWORD, uBits.ToString(), StrUtil.Utf8.GetString(pbNew), Request.GENERATE_PASSWORD, null, null);
                 resp.Entries.Add(item);
                 resp.Success = true;
                 resp.Count = 1;
@@ -665,6 +734,8 @@ namespace KeePassHttp {
                 entry.Login = CryptoTransform(entry.Login, false, true, aes, CMode.ENCRYPT);
                 entry.Uuid = CryptoTransform(entry.Uuid, false, true, aes, CMode.ENCRYPT);
                 entry.Password = CryptoTransform(entry.Password, false, true, aes, CMode.ENCRYPT);
+                entry.Group.Name = CryptoTransform(entry.Group.Name, false, true, aes, CMode.ENCRYPT);
+                entry.Group.Uuid = CryptoTransform(entry.Group.Uuid, false, true, aes, CMode.ENCRYPT);
             }
         }
 
