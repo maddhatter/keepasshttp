@@ -1,17 +1,18 @@
 # Changelog
-All notable changes to this project will be documented in this file.
+All notable changes to this project will be documented in this file. This project is forked from [pfn/keepasshttp](https://github.com/pfn/keepasshttp) - this document only includes changes after that fork.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
+## [1.9.0.1] (2018-09-27)
 
 ### Added
- - Added `get-logins-by-username` RequestType to get all logins with a given username
+ - Added `get-logins-by-username` RequestType to get all logins with a given username (based on upstream [PR#227](https://github.com/pfn/keepasshttp/pull/227))
 
 ### Changed
  - Returned entries now contain a `Group` object consiting of `Name` and `Uuid` to idenfity the group the entry exists in
  - `set-login` now sets the `Success` field based on the result of the `UpdateEntry` or `CreateEntry` command instead of always returning `true`
- - Updated plugin `UpdateUrl` to the `maddhatter/keepasshttp` repository
+ - Changed plugin `UpdateUrl` to the `maddhatter/keepasshttp` repository
+
+### Removed
+ - Removed unused(?) `latest-version.txt` file in repo root
  
 [Unreleased]: https://github.com/maddhatter/keepasshttp/compare/master...develop
+[1.9.0.1]: https://github.com/pfn/keepasshttp/releases/tag/1.9.0.1
