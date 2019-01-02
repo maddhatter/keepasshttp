@@ -23,6 +23,8 @@ using KeePass.Util.Spr;
 namespace KeePassHttp {
     public sealed partial class KeePassHttpExt : Plugin
     {
+        private Random rnd;
+
         private string GetHost(string uri)
         {
             var host = uri;
@@ -96,7 +98,7 @@ namespace KeePassHttp {
                 var login = GetUserPass(entry)[0];
                 var uuid = entry.Uuid.ToHexString();
                 var group = new ResponseGroupField(entry.ParentGroup.GetFullPath("/", true), entry.ParentGroup.Uuid.ToHexString());
-                var e = new ResponseEntry(name, login, null, uuid, group, null);
+                var e = new ResponseEntry(name, login, null, uuid, group, null, IsEntryRecycled(entry));
                 resp.Entries.Add(e);
             }
             resp.Success = true;
@@ -107,6 +109,7 @@ namespace KeePassHttp {
                 entry.Name = CryptoTransform(entry.Name, false, true, aes, CMode.ENCRYPT);
                 entry.Login = CryptoTransform(entry.Login, false, true, aes, CMode.ENCRYPT);
                 entry.Uuid = CryptoTransform(entry.Uuid, false, true, aes, CMode.ENCRYPT);
+                entry.IsRecycled = CryptoTransform(entry.IsRecycled, false, true, aes, CMode.ENCRYPT);
                 entry.Group.Name = CryptoTransform(entry.Group.Name, false, true, aes, CMode.ENCRYPT);
                 entry.Group.Uuid = CryptoTransform(entry.Group.Uuid, false, true, aes, CMode.ENCRYPT);
             }
@@ -476,6 +479,7 @@ namespace KeePassHttp {
                 entry.Name = CryptoTransform(entry.Name, false, true, aes, CMode.ENCRYPT);
                 entry.Login = CryptoTransform(entry.Login, false, true, aes, CMode.ENCRYPT);
                 entry.Uuid = CryptoTransform(entry.Uuid, false, true, aes, CMode.ENCRYPT);
+                entry.IsRecycled = CryptoTransform(entry.IsRecycled, false, true, aes, CMode.ENCRYPT);
                 entry.Password = CryptoTransform(entry.Password, false, true, aes, CMode.ENCRYPT);
                 entry.Group.Name = CryptoTransform(entry.Group.Name, false, true, aes, CMode.ENCRYPT);
                 entry.Group.Uuid = CryptoTransform(entry.Group.Uuid, false, true, aes, CMode.ENCRYPT);
@@ -591,7 +595,7 @@ namespace KeePassHttp {
                 }
             }
 
-            return new ResponseEntry(name, login, passwd, uuid, group, fields);
+            return new ResponseEntry(name, login, passwd, uuid, group, fields, IsEntryRecycled(entryDatabase.entry));
         }
 
         private void SetLoginHandler(Request r, Response resp, Aes aes)
@@ -718,7 +722,7 @@ namespace KeePassHttp {
             if (pbNew != null)
             {
                 uint uBits = QualityEstimation.EstimatePasswordBits(pbNew);
-                ResponseEntry item = new ResponseEntry(Request.GENERATE_PASSWORD, uBits.ToString(), StrUtil.Utf8.GetString(pbNew), Request.GENERATE_PASSWORD, null, null);
+                ResponseEntry item = new ResponseEntry(Request.GENERATE_PASSWORD, uBits.ToString(), StrUtil.Utf8.GetString(pbNew), Request.GENERATE_PASSWORD, null, null, null);
                 resp.Entries.Add(item);
                 resp.Success = true;
                 resp.Count = 1;
@@ -733,6 +737,7 @@ namespace KeePassHttp {
                 entry.Name = CryptoTransform(entry.Name, false, true, aes, CMode.ENCRYPT);
                 entry.Login = CryptoTransform(entry.Login, false, true, aes, CMode.ENCRYPT);
                 entry.Uuid = CryptoTransform(entry.Uuid, false, true, aes, CMode.ENCRYPT);
+                entry.IsRecycled = CryptoTransform(entry.IsRecycled, false, true, aes, CMode.ENCRYPT);
                 entry.Password = CryptoTransform(entry.Password, false, true, aes, CMode.ENCRYPT);
                 entry.Group.Name = CryptoTransform(entry.Group.Name, false, true, aes, CMode.ENCRYPT);
                 entry.Group.Uuid = CryptoTransform(entry.Group.Uuid, false, true, aes, CMode.ENCRYPT);
@@ -896,6 +901,33 @@ namespace KeePassHttp {
             UpdateUI(group);
 
             return true;
+        }
+
+        // returns an even number if no, odd number if yes (string representation of each)
+        private string IsEntryRecycled(PwEntry entry)
+        {
+            // Adapted from https://github.com/kee-org/keepassrpc/blob/b418a02a66f3d66dc42a9dbb581054bcdd2eb05f/KeePassRPC/KeePassRPCService.cs#L1571-L1581
+            // Returning random even/odd number instead of a boolean to increase randomness so it's not silly obvious in the response
+
+            
+            if (rnd == null)
+            {
+                rnd = new Random();
+            }
+
+            PwGroup parent = entry.ParentGroup;
+            while (parent != null)
+            {
+                if (host.Database.RecycleBinUuid.Equals(parent.Uuid))
+                {
+                    
+                    return ((rnd.Next() * 2) + 1).ToString();
+                    //return "Yes";
+                }
+                parent = parent.ParentGroup;
+            }
+            return (rnd.Next() * 2).ToString();
+            //return "No";
         }
     }
 }

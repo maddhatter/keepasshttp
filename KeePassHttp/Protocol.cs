@@ -184,7 +184,7 @@ namespace KeePassHttp
 
         /// <summary>
         /// Nonce value used in conjunction with all encrypted fields,
-        /// randomly generated for each request
+        /// randomly generated for each requets
         /// </summary>
         public string Nonce;
 
@@ -196,7 +196,7 @@ namespace KeePassHttp
     public class ResponseEntry
     {
         public ResponseEntry() { }
-        public ResponseEntry(string name, string login, string password, string uuid, ResponseGroupField group, List<ResponseStringField> stringFields)
+        public ResponseEntry(string name, string login, string password, string uuid, ResponseGroupField group, List<ResponseStringField> stringFields, string isRecycled)
         {
             Login = login;
             Password = password;
@@ -204,11 +204,13 @@ namespace KeePassHttp
             Name = name;
             Group = group;
             StringFields = stringFields;
+            IsRecycled = isRecycled;
         }
         public string Login;
         public string Password;
         public string Uuid;
         public string Name;
+        public string IsRecycled;
         public ResponseGroupField Group;
         public List<ResponseStringField> StringFields = null;
     }
