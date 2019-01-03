@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file. This project is forked from [pfn/keepasshttp](https://github.com/pfn/keepasshttp) - this document only includes changes after that fork.
 
-## [Unreleased]
+## [1.11.0.0] (2019-01-03)
 
 ### Added
  - `set-login` now accepts `GroupName` as a `/` delimited string for entries and will create the nested group if it doesn't exist
@@ -31,5 +31,6 @@ All notable changes to this project will be documented in this file. This projec
  - Removed unused(?) `latest-version.txt` file in repo root
  
 [Unreleased]: https://github.com/maddhatter/keepasshttp/compare/master...develop
+[1.11.0.0]: https://github.com/pfn/keepasshttp/releases/tag/1.11.0.0
 [1.10.0.0]: https://github.com/pfn/keepasshttp/releases/tag/1.10.0.0
 [1.9.0.1]: https://github.com/pfn/keepasshttp/releases/tag/1.9.0.1
