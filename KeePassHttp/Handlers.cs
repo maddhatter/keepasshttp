@@ -96,9 +96,10 @@ namespace KeePassHttp {
             {
                 var name = entry.Strings.ReadSafe(PwDefs.TitleField);
                 var login = GetUserPass(entry)[0];
+                var password = GetUserPass(entry)[1];
                 var uuid = entry.Uuid.ToHexString();
                 var group = new ResponseGroupField(entry.ParentGroup.GetFullPath("/", true), entry.ParentGroup.Uuid.ToHexString());
-                var e = new ResponseEntry(name, login, null, uuid, group, null, IsEntryRecycled(entry));
+                var e = new ResponseEntry(name, login, password, uuid, group, null, IsEntryRecycled(entry));
                 resp.Entries.Add(e);
             }
             resp.Success = true;
@@ -108,6 +109,7 @@ namespace KeePassHttp {
             {
                 entry.Name = CryptoTransform(entry.Name, false, true, aes, CMode.ENCRYPT);
                 entry.Login = CryptoTransform(entry.Login, false, true, aes, CMode.ENCRYPT);
+                entry.Password = CryptoTransform(entry.Password, false, true, aes, CMode.ENCRYPT);
                 entry.Uuid = CryptoTransform(entry.Uuid, false, true, aes, CMode.ENCRYPT);
                 entry.IsRecycled = CryptoTransform(entry.IsRecycled, false, true, aes, CMode.ENCRYPT);
                 entry.Group.Name = CryptoTransform(entry.Group.Name, false, true, aes, CMode.ENCRYPT);
@@ -607,11 +609,21 @@ namespace KeePassHttp {
             var urlHost = GetHost(url);
 
             PwUuid uuid = null;
-            string username, password;
+            string username, password, name = null, group = null;
 
             username = CryptoTransform(r.Login, true, false, aes, CMode.DECRYPT);
             password = CryptoTransform(r.Password, true, false, aes, CMode.DECRYPT);
             
+            if (r.Name != null)
+            {
+                name = CryptoTransform(r.Name, true, false, aes, CMode.DECRYPT);
+            }
+
+            if (r.GroupName != null)
+            {
+                group = CryptoTransform(r.GroupName, true, false, aes, CMode.DECRYPT);
+            }
+
             if (r.Uuid != null)
             {
                 uuid = new PwUuid(MemUtil.HexStringToByteArray(
@@ -621,12 +633,12 @@ namespace KeePassHttp {
             if (uuid != null)
             {
                 // modify existing entry
-                resp.Success = UpdateEntry(uuid, username, password, urlHost, r.Id);
+                resp.Success = UpdateEntry(uuid, username, password, urlHost, r.Id, group, name);
             }
             else
             {
                 // create new entry
-                resp.Success = CreateEntry(username, password, urlHost, url, r, aes);
+                resp.Success = CreateEntry(username, password, urlHost, url, r, aes, group, name);
             }
 
             resp.Id = r.Id;
@@ -768,7 +780,7 @@ namespace KeePassHttp {
             UpdateUI(e.ParentGroup);
         }
 
-        private bool UpdateEntry(PwUuid uuid, string username, string password, string formHost, string requestId)
+        private bool UpdateEntry(PwUuid uuid, string username, string password, string formHost, string requestId, string groupName, string name)
         {
             PwEntry entry = null;
 
@@ -800,8 +812,12 @@ namespace KeePassHttp {
             string[] up = GetUserPass(entry);
             var u = up[0];
             var p = up[1];
+            var t = up[2];
+            var currentGroup = entry.ParentGroup.GetFullPath("/", true);
+            // prepend the passed group w/ the root group name so it matches the GetFullPath
+            var fullGroupName = host.Database.RootGroup.Name + "/" + groupName;
 
-            if (u != username || p != password)
+            if (u != username || p != password || (groupName != null && currentGroup != fullGroupName) || t != name)
             {
                 bool allowUpdate = configOpt.AlwaysAllowUpdates;
 
@@ -835,10 +851,34 @@ namespace KeePassHttp {
 
                 if (allowUpdate)
                 {
+                    if (groupName != null)
+                    {
+                        PwGroup newGroup;
+
+                        if (groupName == "/")
+                        {
+                            newGroup = host.Database.RootGroup;
+                        }
+                        else
+                        {
+                            newGroup = host.Database.RootGroup.FindCreateSubTree(groupName, "/".ToCharArray());
+                        }
+                        
+                        if (entry.ParentGroup != newGroup)
+                        {
+                            var oldGroup = entry.ParentGroup;
+                            newGroup.AddEntry(entry, true);
+                            oldGroup.Entries.Remove(entry);
+                        }
+                        
+                    }
+
+
                     PwObjectList<PwEntry> m_vHistory = entry.History.CloneDeep();
                     entry.History = m_vHistory;
                     entry.CreateBackup(null);
 
+                    entry.Strings.Set(PwDefs.TitleField, new ProtectedString(false, name));
                     entry.Strings.Set(PwDefs.UserNameField, new ProtectedString(false, username));
                     entry.Strings.Set(PwDefs.PasswordField, new ProtectedString(true, password));
                     entry.Touch(true, false);
@@ -851,20 +891,24 @@ namespace KeePassHttp {
             return false;
         }
 
-        private bool CreateEntry(string username, string password, string urlHost, string url, Request r, Aes aes)
+        private bool CreateEntry(string username, string password, string urlHost, string url, Request r, Aes aes, string groupName, string name)
         {
             string realm = null;
             if (r.Realm != null)
                 realm = CryptoTransform(r.Realm, true, false, aes, CMode.DECRYPT);
 
             var root = host.Database.RootGroup;
-            var group = root.FindCreateGroup(KEEPASSHTTP_GROUP_NAME, false);
-            if (group == null)
+            PwGroup group;
+
+            if (groupName == "/")
             {
-                group = new PwGroup(true, true, KEEPASSHTTP_GROUP_NAME, PwIcon.WorldComputer);
-                root.AddGroup(group, true);
-                UpdateUI(null);
+                group = root;
             }
+            else
+            {
+                group = root.FindCreateGroup(groupName ?? KEEPASSHTTP_GROUP_NAME, true);
+            }
+            
 
             string submithost = null;
             if (r.SubmitUrl != null)
@@ -878,7 +922,7 @@ namespace KeePassHttp {
             }
 
             PwEntry entry = new PwEntry(true, true);
-            entry.Strings.Set(PwDefs.TitleField, new ProtectedString(false, urlHost));
+            entry.Strings.Set(PwDefs.TitleField, new ProtectedString(false, name ?? urlHost));
             entry.Strings.Set(PwDefs.UserNameField, new ProtectedString(false, username));
             entry.Strings.Set(PwDefs.PasswordField, new ProtectedString(true, password));
             entry.Strings.Set(PwDefs.UrlField, new ProtectedString(true, baseUrl));
@@ -920,14 +964,11 @@ namespace KeePassHttp {
             {
                 if (host.Database.RecycleBinUuid.Equals(parent.Uuid))
                 {
-                    
                     return ((rnd.Next() * 2) + 1).ToString();
-                    //return "Yes";
                 }
                 parent = parent.ParentGroup;
             }
             return (rnd.Next() * 2).ToString();
-            //return "No";
         }
     }
 }

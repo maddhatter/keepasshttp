@@ -422,6 +422,8 @@ namespace KeePassHttp
                     entryDatabase.entry.Strings.ReadSafe(PwDefs.UserNameField), ctx);
             string pass = SprEngine.Compile(
                     entryDatabase.entry.Strings.ReadSafe(PwDefs.PasswordField), ctx);
+            string title = SprEngine.Compile(
+                    entryDatabase.entry.Strings.ReadSafe(PwDefs.TitleField), ctx);
             var f = (MethodInvoker)delegate
             {
                 // apparently, SprEngine.Compile might modify the database
@@ -432,7 +434,7 @@ namespace KeePassHttp
             else
                 f.Invoke();
 
-            return new string[] { user, pass };
+            return new string[] { user, pass, title };
         }
 
         /// <summary>
