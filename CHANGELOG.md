@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file. This project is forked from [pfn/keepasshttp](https://github.com/pfn/keepasshttp) - this document only includes changes after that fork.
 
+## [Unreleased]
+
+### Added
+ - `set-login` now accepts `GroupName` as a `/` delimited string for entries and will create the nested group if it doesn't exist
+	 - The group name should **not** contain the root group name
+	 - To specify the root group, use `/`
+ - `set-login` accepts a `Name` field to set the title of an entry
+
+### Changed
+ - `get-all-logins` returns the passwords for entries
+
 ## [1.10.0.0] (2019-01-02)
 
 ### Added

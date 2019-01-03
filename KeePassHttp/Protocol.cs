@@ -84,9 +84,11 @@ namespace KeePassHttp
         /// Always encrypted, used with set-login, uuid is set
         /// if modifying an existing login
         /// </summary>
+        public string Name;
         public string Login;
         public string Password;
         public string Uuid;
+        public string GroupName;
 
         /// <summary>
         /// Always encrypted, used with get and set-login
