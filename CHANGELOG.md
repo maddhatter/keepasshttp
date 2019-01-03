@@ -31,6 +31,6 @@ All notable changes to this project will be documented in this file. This projec
  - Removed unused(?) `latest-version.txt` file in repo root
  
 [Unreleased]: https://github.com/maddhatter/keepasshttp/compare/master...develop
-[1.11.0.0]: https://github.com/pfn/keepasshttp/releases/tag/1.11.0.0
-[1.10.0.0]: https://github.com/pfn/keepasshttp/releases/tag/1.10.0.0
-[1.9.0.1]: https://github.com/pfn/keepasshttp/releases/tag/1.9.0.1
+[1.11.0.0]: https://github.com/maddhatter/keepasshttp/releases/tag/1.11.0.0
+[1.10.0.0]: https://github.com/maddhatter/keepasshttp/releases/tag/1.10.0.0
+[1.9.0.1]: https://github.com/maddhatter/keepasshttp/releases/tag/1.9.0.1
