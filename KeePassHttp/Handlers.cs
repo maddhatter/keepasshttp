@@ -817,7 +817,7 @@ namespace KeePassHttp {
             // prepend the passed group w/ the root group name so it matches the GetFullPath
             var fullGroupName = host.Database.RootGroup.Name + "/" + groupName;
 
-            if (u != username || p != password || (groupName != null && currentGroup != fullGroupName) || t != name)
+            if (u != username || p != password || (groupName != null && currentGroup != fullGroupName) || (name != null && t != name))
             {
                 bool allowUpdate = configOpt.AlwaysAllowUpdates;
 
@@ -878,7 +878,11 @@ namespace KeePassHttp {
                     entry.History = m_vHistory;
                     entry.CreateBackup(null);
 
-                    entry.Strings.Set(PwDefs.TitleField, new ProtectedString(false, name));
+                    if (name != null)
+                    {
+                        entry.Strings.Set(PwDefs.TitleField, new ProtectedString(false, name));
+                    }
+                    
                     entry.Strings.Set(PwDefs.UserNameField, new ProtectedString(false, username));
                     entry.Strings.Set(PwDefs.PasswordField, new ProtectedString(true, password));
                     entry.Touch(true, false);
