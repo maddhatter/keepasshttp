@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file. This project is forked from [pfn/keepasshttp](https://github.com/pfn/keepasshttp) - this document only includes changes after that fork.
 
+## [1.11.1.0] (2019-01-04)
+
+### Fixed
+ - Blank `Name` fields caused the `set-login` handler to crash
+
 ## [1.11.0.0] (2019-01-03)
 
 ### Added
@@ -31,6 +36,7 @@ All notable changes to this project will be documented in this file. This projec
  - Removed unused(?) `latest-version.txt` file in repo root
  
 [Unreleased]: https://github.com/maddhatter/keepasshttp/compare/master...develop
+[1.11.1.0]: https://github.com/maddhatter/keepasshttp/releases/tag/1.11.1.0
 [1.11.0.0]: https://github.com/maddhatter/keepasshttp/releases/tag/1.11.0.0
 [1.10.0.0]: https://github.com/maddhatter/keepasshttp/releases/tag/1.10.0.0
 [1.9.0.1]: https://github.com/maddhatter/keepasshttp/releases/tag/1.9.0.1
