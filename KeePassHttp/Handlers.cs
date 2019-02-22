@@ -749,10 +749,7 @@ namespace KeePassHttp {
                 entry.Name = CryptoTransform(entry.Name, false, true, aes, CMode.ENCRYPT);
                 entry.Login = CryptoTransform(entry.Login, false, true, aes, CMode.ENCRYPT);
                 entry.Uuid = CryptoTransform(entry.Uuid, false, true, aes, CMode.ENCRYPT);
-                entry.IsRecycled = CryptoTransform(entry.IsRecycled, false, true, aes, CMode.ENCRYPT);
                 entry.Password = CryptoTransform(entry.Password, false, true, aes, CMode.ENCRYPT);
-                entry.Group.Name = CryptoTransform(entry.Group.Name, false, true, aes, CMode.ENCRYPT);
-                entry.Group.Uuid = CryptoTransform(entry.Group.Uuid, false, true, aes, CMode.ENCRYPT);
             }
         }
 
@@ -861,7 +858,7 @@ namespace KeePassHttp {
                         }
                         else
                         {
-                            newGroup = host.Database.RootGroup.FindCreateSubTree(groupName, "/".ToCharArray());
+                            newGroup = host.Database.RootGroup.FindCreateSubTree(groupName, KEEPASSHTTP_GROUP_SEPERATOR);
                         }
                         
                         if (entry.ParentGroup != newGroup)
@@ -910,7 +907,7 @@ namespace KeePassHttp {
             }
             else
             {
-                group = root.FindCreateGroup(groupName ?? KEEPASSHTTP_GROUP_NAME, true);
+                group = root.FindCreateSubTree(groupName ?? KEEPASSHTTP_GROUP_NAME, KEEPASSHTTP_GROUP_SEPERATOR);
             }
             
 
