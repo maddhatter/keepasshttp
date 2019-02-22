@@ -749,10 +749,7 @@ namespace KeePassHttp {
                 entry.Name = CryptoTransform(entry.Name, false, true, aes, CMode.ENCRYPT);
                 entry.Login = CryptoTransform(entry.Login, false, true, aes, CMode.ENCRYPT);
                 entry.Uuid = CryptoTransform(entry.Uuid, false, true, aes, CMode.ENCRYPT);
-                entry.IsRecycled = CryptoTransform(entry.IsRecycled, false, true, aes, CMode.ENCRYPT);
                 entry.Password = CryptoTransform(entry.Password, false, true, aes, CMode.ENCRYPT);
-                entry.Group.Name = CryptoTransform(entry.Group.Name, false, true, aes, CMode.ENCRYPT);
-                entry.Group.Uuid = CryptoTransform(entry.Group.Uuid, false, true, aes, CMode.ENCRYPT);
             }
         }
 
