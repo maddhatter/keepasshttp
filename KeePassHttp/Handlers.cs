@@ -858,7 +858,7 @@ namespace KeePassHttp {
                         }
                         else
                         {
-                            newGroup = host.Database.RootGroup.FindCreateSubTree(groupName, "/".ToCharArray());
+                            newGroup = host.Database.RootGroup.FindCreateSubTree(groupName, KEEPASSHTTP_GROUP_SEPERATOR);
                         }
                         
                         if (entry.ParentGroup != newGroup)
@@ -907,7 +907,7 @@ namespace KeePassHttp {
             }
             else
             {
-                group = root.FindCreateGroup(groupName ?? KEEPASSHTTP_GROUP_NAME, true);
+                group = root.FindCreateSubTree(groupName ?? KEEPASSHTTP_GROUP_NAME, KEEPASSHTTP_GROUP_SEPERATOR);
             }
             
 
