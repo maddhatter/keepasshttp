@@ -1,5 +1,12 @@
 # Changelog
-All notable changes to this project will be documented in this file. This project is forked from [pfn/keepasshttp](https://github.com/pfn/keepasshttp) - this document only includes changes after that fork.
+All notable changes to this project will be documented in this file. This project is forked from [pfn/keepasshttp](https://github.com/pfn/keepasshttp) - this document only includes changes 
+after that fork.
+
+## [1.11.2.0] (2019-02-22)
+
+### Fixed
+ - `generate-password` requests were failing
+ - Creating a new account with a group name like `Root/Sub` would create a group litterally named "Group/Sub" vs nested groups. (Modifications to existing entries worked as expected.)
 
 ## [1.11.1.0] (2019-01-04)
 
