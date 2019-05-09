@@ -29,7 +29,7 @@ This plugin is primarily intended for use with [PassIFox for Mozilla Firefox](ht
 
 ## Non-Windows / Manual Windows installation
 
- 1. Download [KeePassHttp](https://raw.github.com/pfn/keepasshttp/master/KeePassHttp.plgx)
+ 1. Download the latest release [KeePassHttp.plgx](https://github.com/maddhatter/keepasshttp/releases/latest)
  2. Copy it into the KeePass directory
 	* default directory in Ubuntu14.04: /usr/lib/keepass2/
 	* default directory in Arch: /usr/share/keepass
