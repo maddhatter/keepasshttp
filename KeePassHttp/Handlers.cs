@@ -154,28 +154,41 @@ namespace KeePassHttp {
             }
 
             int listCount = 0;
+            bool titleSearch = (searchHost.IndexOf(".") == -1);
             foreach (PwDatabase db in listDatabases)
             {
                 searchHost = origSearchHost;
-                //get all possible entries for given host-name
-                while (listResult.Count == listCount && (origSearchHost == searchHost || searchHost.IndexOf(".") != -1))
-                {
-                    parms.SearchString = String.Format("^{0}$|/{0}/?", searchHost);
-                    var listEntries = new PwObjectList<PwEntry>();
-                    db.RootGroup.SearchEntries(parms, listEntries);
-                    foreach (var le in listEntries)
-                    {
-                        listResult.Add(new PwEntryDatabase(le, db));
-                    }
-                    searchHost = searchHost.Substring(searchHost.IndexOf(".") + 1);
-                    
-                    //searchHost contains no dot --> prevent possible infinite loop
-                    if (searchHost == origSearchHost)
-                        break;
-                }
-                listCount = listResult.Count;
-            }
-            
+		if (!titleSearch)
+		{
+		   //get all possible entries for given host-name
+		   while (listResult.Count == listCount && (origSearchHost == searchHost || searchHost.IndexOf(".") != -1))
+		   {
+		       parms.SearchString = String.Format("^{0}$|/{0}/?", searchHost);
+		       var listEntries = new PwObjectList<PwEntry>();
+		       db.RootGroup.SearchEntries(parms, listEntries);
+		       foreach (var le in listEntries)
+		       {
+			   listResult.Add(new PwEntryDatabase(le, db));
+		       }
+		       searchHost = searchHost.Substring(searchHost.IndexOf(".") + 1);
+
+		       //searchHost contains no dot --> prevent possible infinite loop
+		       if (searchHost == origSearchHost)
+			   break;
+		   }
+		}
+		else
+		{
+		    parms.SearchString = String.Format("{0}", searchHost);
+		    var listEntries = new PwObjectList<PwEntry>();
+		    db.RootGroup.SearchEntries(parms, listEntries);
+		    foreach (var le in listEntries)
+		    {
+			listResult.Add(new PwEntryDatabase(le, db));
+		    }
+		}
+		listCount = listResult.Count;
+	    }
 
             Func<PwEntry, bool> filter = delegate(PwEntry e)
             {
@@ -205,7 +218,7 @@ namespace KeePassHttp {
                     if (formHost.EndsWith(uHost))
                         return true;
                 }
-                return formHost.Contains(title) || (entryUrl != null && formHost.Contains(entryUrl));
+                return title.Contains(formHost) || (entryUrl != null && formHost.Contains(entryUrl));
             };
 
             Func<PwEntry, bool> filterSchemes = delegate(PwEntry e)
